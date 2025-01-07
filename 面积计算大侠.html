@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>面积计算大侠</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(to bottom, #F9FAFB, #ECF2F4);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 80%;
+            margin-top: 20px;
+        }
+        canvas {
+            border: 1px solid #0073e6;
+            background-color: #fff;
+        }
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+        .controls button {
+            padding: 10px;
+            font-size: 16px;
+            margin-right: 5px;
+            cursor: pointer;
+            border: 1px solid #0073e6;
+            background-color: #0073e6;
+            color: white;
+            border-radius: 8px;
+        }
+        .info {
+            margin-top: 10px;
+            font-size: 16px;
+            color: red;
+        }
+        .shape-name {
+            text-align: center;
+            font-size: 20px;
+            margin: 10px 0;
+        }
+        .small-text {
+            font-size: 12px;
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>面积计算大侠</h1>
+        <div class="shape-name" id="shape-name">长方形</div>
+        <canvas id="canvas" width="800" height="400"></canvas>
+        <div class="controls">
+            <button id="shape-toggle">图形切换</button>
+            <button id="parameter-adjust">参数调整</button>
+            <button id="calculate-area">面积计算</button>
+        </div>
+        <div class="info" id="info"></div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const info = document.getElementById('info');
+        const shapeNameElement = document.getElementById('shape-name');
+
+        let shapes = ['rectangle', 'square', 'triangle', 'parallelogram', 'trapezoid', 'circle'];
+        let shapeNames = ['长方形', '正方形', '三角形', '平行四边形', '梯形', '圆形'];
+        let currentShapeIndex = 0;
+        let parameters = { a: 5, b: 3, c: 4, d: 4, h: 4, r: 3 };
+
+        function drawShape() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const shape = shapes[currentShapeIndex];
+            const fillColor = '#FFDEAD';
+            ctx.fillStyle = fillColor;
+            ctx.strokeStyle = '#000000';
+            shapeNameElement.textContent = shapeNames[currentShapeIndex];
+            let isOutOfBounds = false;
+
+            ctx.beginPath();
+
+            switch (shape) {
+                case 'rectangle':
+                    ctx.rect(200 - (parameters.a * 20), 200 - (parameters.b * 20), parameters.a * 40, parameters.b * 40);
+                    ctx.fill();
+                    ctx.stroke();
+                    ctx.font = '16px Arial';
+                    ctx.fillStyle = '#000000';
+                    ctx.fillText(`长 a = ${parameters.a} cm`, 200, 190 - (parameters.b * 20));
+                    ctx.fillText(`宽 b = ${parameters.b} cm`, 180 - (parameters.a * 20), 200);
+                    if (parameters.a * 40 > canvas.width || parameters.b * 40 > canvas.height) isOutOfBounds = true;
+                    break;
+
+                case 'square':
+                    ctx.rect(200 - (parameters.a * 20), 200 - (parameters.a * 20), parameters.a * 40, parameters.a * 40);
+                    ctx.fill();
+                    ctx.stroke();
+                    ctx.fillStyle = '#000000';
+                    ctx.fillText(`边长 a = ${parameters.a} cm`, 200, 190 - (parameters.a * 20));
+                    if (parameters.a * 40 > canvas.width || parameters.a * 40 > canvas.height) isOutOfBounds = true;
+                    break;
+
+                case 'triangle':
+                    ctx.moveTo(200 - (parameters.a * 20), 200 + (parameters.h * 20));
+                    ctx.lineTo(200 + (parameters.a * 20), 200 + (parameters.h * 20));
+                    ctx.lineTo(200, 200 - (parameters.h * 20));
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.stroke();
+                    ctx.fillStyle = '#000000';
+                    ctx.fillText(`底 a = ${parameters.a} cm`, 180 + (parameters.a * 20), 220 + (parameters.h * 20));
+                    ctx.fillText(`高 h = ${parameters.h} cm`, 160, 190 - (parameters.h * 20));
+                    if ((parameters.a * 40) > canvas.width || (parameters.h * 40) > canvas.height) isOutOfBounds = true;
+                    break;
+
+                case 'parallelogram':
+                    ctx.moveTo(200 - (parameters.c * 20), 200 - (parameters.h * 20));
+                    ctx.lineTo(200 + (parameters.a - parameters.c) * 20, 200 - (parameters.h * 20));
+                    ctx.lineTo(200 + (parameters.a - parameters.c + parameters.a) * 20, 200 + (parameters.h * 20));
+                    ctx.lineTo(200 - parameters.c * 20 + parameters.a * 20, 200 + (parameters.h * 20));
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.stroke();
+                    ctx.fillStyle = '#000000';
+                    ctx.fillText(`底 a = ${parameters.a} cm`, 200, 190 - (parameters.h * 20));
+                    ctx.fillText(`高 h = ${parameters.h} cm`, 160, 210 + (parameters.h * 20));
+                    if ((parameters.a * 40) > canvas.width || (parameters.h * 40 * 2) > canvas.height) isOutOfBounds = true;
+                    break;
+
+                case 'trapezoid':
+                    const midA = parameters.a / 2;
+                    const midB = parameters.b / 2;
+                    ctx.moveTo(200 - midA * 20, 200 + parameters.h * 20); // 下底左点
+                    ctx.lineTo(200 + midA * 20, 200 + parameters.h * 20); // 下底右点
+                    ctx.lineTo(200 + midB * 20, 200 - parameters.h * 20); // 上底右点
+                    ctx.lineTo(200 - midB * 20, 200 - parameters.h * 20); // 上底左点
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.stroke();
+                    ctx.fillStyle = '#000000';
+                    ctx.fillText(`上底 b = ${parameters.b} cm`, 200, 190 - (parameters.h * 20));
+                    ctx.fillText(`下底 a = ${parameters.a} cm`, 200, 210 + (parameters.h * 20));
+                    ctx.fillText(`高 h = ${parameters.h} cm`, 240, 200);
+                    if ((parameters.a * 40) > canvas.width || (parameters.h * 40 * 2) > canvas.height) isOutOfBounds = true;
+                    break;
+
+                case 'circle':
+                    ctx.arc(200, 200, parameters.r * 40, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.stroke();
+                    ctx.fillStyle = '#000000';
+                    ctx.fillText(`半径 r = ${parameters.r} cm`, 240, 200 - (parameters.r * 40));
+                    if (parameters.r * 40 > canvas.width / 2 || parameters.r * 40 > canvas.height / 2) isOutOfBounds = true;
+                    break;
+            }
+
+            if (isOutOfBounds) {
+                ctx.font = '12px Arial';
+                ctx.fillStyle = 'red';
+                ctx.fillText('图形无法展示完整', 10, 20);
+            }
+        }
+
+        function calculateArea() {
+            const shape = shapes[currentShapeIndex];
+            let area;
+
+            switch (shape) {
+                case 'rectangle':
+                    area = parameters.a * parameters.b;
+                    info.textContent = `面积 S = a × b = ${parameters.a} × ${parameters.b} = ${area} 平方厘米`;
+                    break;
+
+                case 'square':
+                    area = parameters.a * parameters.a;
+                    info.textContent = `面积 S = a² = ${parameters.a}² = ${area} 平方厘米`;
+                    break;
+
+                case 'triangle':
+                    area = (parameters.a * parameters.h) / 2;
+                    info.textContent = `面积 S = (a × h) / 2 = (${parameters.a} × ${parameters.h}) / 2 = ${area} 平方厘米`;
+                    break;
+
+                case 'parallelogram':
+                    area = parameters.a * parameters.h;
+                    info.textContent = `面积 S = a × h = ${parameters.a} × ${parameters.h} = ${area} 平方厘米`;
+                    break;
+
+                case 'trapezoid':
+                    area = ((parameters.a + parameters.b) * parameters.h) / 2;
+                    info.textContent = `面积 S = ((a + b) × h) / 2 = ((${parameters.a} + ${parameters.b}) × ${parameters.h}) / 2 = ${area} 平方厘米`;
+                    break;
+
+                case 'circle':
+                    area = Math.PI * parameters.r * parameters.r;
+                    info.textContent = `面积 S = π × r² = 3.14 × ${parameters.r}² = ${area.toFixed(2)} 平方厘米`;
+                    break;
+            }
+        }
+
+        function showParameterAdjust() {
+            const shape = shapes[currentShapeIndex];
+            let htmlContent = '';
+            const updateButton = document.createElement('button');
+            updateButton.textContent = '更新参数';
+            updateButton.style.padding = "10px";
+            updateButton.style.fontSize = "16px";
+            updateButton.style.cursor = "pointer";
+
+            switch (shape) {
+                case 'rectangle':
+                    htmlContent = `
+                        <label>长 (a):</label>
+                        <input type="number" id="paramA" value="${parameters.a}"><br>
+                        <label>宽 (b):</label>
+                        <input type="number" id="paramB" value="${parameters.b}"><br>
+                    `;
+                    break;
+                case 'square':
+                    htmlContent = `
+                        <label>边长 (a):</label>
+                        <input type="number" id="paramA" value="${parameters.a}"><br>
+                    `;
+                    break;
+                case 'triangle':
+                    htmlContent = `
+                        <label>底 (a):</label>
+                        <input type="number" id="paramA" value="${parameters.a}"><br>
+                        <label>高 (h):</label>
+                        <input type="number" id="paramH" value="${parameters.h}"><br>
+                    `;
+                    break;
+                case 'parallelogram':
+                    htmlContent = `
+                        <label>底 (a):</label>
+                        <input type="number" id="paramA" value="${parameters.a}"><br>
+                        <label>高 (h):</label>
+                        <input type="number" id="paramH" value="${parameters.h}"><br>
+                        <label>腰 (c):</label>
+                        <input type="number" id="paramC" value="${parameters.c}"><br>
+                    `;
+                    break;
+                case 'trapezoid':
+                    htmlContent = `
+                        <label>上底 (b):</label>
+                        <input type="number" id="paramB" value="${parameters.b}"><br>
+                        <label>下底 (a):</label>
+                        <input type="number" id="paramA" value="${parameters.a}"><br>
+                        <label>高 (h):</label>
+                        <input type="number" id="paramH" value="${parameters.h}"><br>
+                    `;
+                    break;
+                case 'circle':
+                    htmlContent = `
+                        <label>半径 (r):</label>
+                        <input type="number" id="paramR" value="${parameters.r}"><br>
+                    `;
+                    break;
+            }
+
+            const div = document.createElement('div');
+            div.innerHTML = htmlContent;
+            div.appendChild(updateButton);
+            document.body.appendChild(div);
+
+            updateButton.addEventListener('click', () => {
+                if (document.getElementById('paramA')) parameters.a = parseFloat(document.getElementById('paramA').value);
+                if (document.getElementById('paramB')) parameters.b = parseFloat(document.getElementById('paramB').value);
+                if (document.getElementById('paramC')) parameters.c = parseFloat(document.getElementById('paramC').value);
+                if (document.getElementById('paramH')) parameters.h = parseFloat(document.getElementById('paramH').value);
+                if (document.getElementById('paramR')) parameters.r = parseFloat(document.getElementById('paramR').value);
+
+                if (Object.values(parameters).some(param => param <= 0)) {
+                    info.textContent = '参数不得为负或零！';
+                    return;
+                }
+
+                info.textContent = '';
+                drawShape();
+                div.remove();
+            });
+        }
+
+        document.getElementById('shape-toggle').addEventListener('click', () => {
+            currentShapeIndex = (currentShapeIndex + 1) % shapes.length;
+            drawShape();
+        });
+
+        document.getElementById('parameter-adjust').addEventListener('click', showParameterAdjust);
+        document.getElementById('calculate-area').addEventListener('click', calculateArea);
+
+        drawShape();
+    </script>
+</body>
+</html>
